@@ -1,16 +1,17 @@
-"""
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
+from django.contrib.auth.models import AnonymousUser
+from django.test import RequestFactory, TestCase
 
-Replace this with more appropriate tests for your application.
-"""
-
-from django.test import TestCase
+from .views import suscribe_newsletter
 
 
-class SimpleTest(TestCase):
-    def test_basic_addition(self):
-        """
-        Tests that 1 + 1 always equals 2.
-        """
-        self.assertEqual(1 + 1, 2)
+class SubscribeTestCase(TestCase):
+    def test_an_anonymous_user_can_subscribe(self):
+        data = {
+            'email_user': 'edgar@poe.com',
+        }
+
+        request = RequestFactory().post('/', data)
+        request.user = AnonymousUser()
+        response = suscribe_newsletter(request)
+
+        self.assertEqual(response.status_code, 200)
