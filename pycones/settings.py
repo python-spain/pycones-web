@@ -178,6 +178,7 @@ INSTALLED_APPS = [
 
 if DEBUG:
     INSTALLED_APPS += ["django_nose"]
+    TEST_RUNNER = "django_nose.NoseTestSuiteRunner"
 
 FIXTURE_DIRS = [
     os.path.join(PROJECT_ROOT, "fixtures"),
@@ -231,8 +232,6 @@ PROPOSAL_FORMS = {
 }
 
 ACTIVE_NEWSLETTER="2013"
-
-TEST_RUNNER = "django_nose.NoseTestSuiteRunner"
 
 # local_settings.py can be used to override environment-specific settings
 # like database and email that differ between development and production.
