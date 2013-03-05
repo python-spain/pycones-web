@@ -10,6 +10,7 @@ from django.template import RequestContext
 from django import http
 
 from .models import Subscription, get_or_create_active_newsletter
+from pycones.profile.models import Profile
 
 
 def send_welcome_msg(email_user, token):
@@ -38,15 +39,19 @@ def suscribe_newsletter(request):
     if request.method != 'POST':
         return redirect('/')
 
-    email = request.POST('email_user', None)
+    email = request.POST.get('email_user', None)
     newsletter = get_or_create_active_newsletter()
 
-    if not email_user:
+    if not email:
         context = {'message' : u"Error al recoger el email. Intentalo de nuevo mas tarde"}
         return render_to_response("newsletter/comingsoon_message.html", context,
                                   context_instance=RequestContext(request))
 
-    if not User.objects.filter(username=email).exists():
+    user_queryset = User.objects.filter(username=email)
+
+    try:
+        user = user_queryset.get()
+    except User.DoesNotExist:
         user = User(username=email, email=email)
         user.set_unusable_password()
         user.save()
@@ -55,13 +60,15 @@ def suscribe_newsletter(request):
         profile = Profile(user=user, newsletter_token=unicode(uuid.uuid4()))
         profile.save()
 
-    if Subscriber.objects.filter(user=user, newsletter=newsletter).exists():
+    if Subscription.objects.filter(user=user, newsletter=newsletter).exists():
         context = {'message' : u"Se ha producido un error. Quizás ya estes dado de alta."}
         return render_to_response("newsletter/comingsoon_message.html", context,
                                   context_instance=RequestContext(request))
 
-    subscriber = Subscriber(user=user, newsletter=newsletter)
+    subscriber = Subscription(user=user, newsletter=newsletter)
     subscriber.save()
+
+    send_welcome_msg(user.email, user.profile.newsletter_token)
 
     context = {'message' : u"Registrado. Muchas gracias"}
     return render_to_response("newsletter/comingsoon_message.html", context,
