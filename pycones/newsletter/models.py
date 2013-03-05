@@ -92,7 +92,7 @@ class Newsletter(models.Model):
     create_date = models.DateTimeField(editable=False, auto_now_add=True)
 
     def __unicode__(self):
-        return name
+        return self.name
 
 
 class Article(models.Model):

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import uuid
+
 from django.shortcuts import render_to_response,redirect
 from django.contrib.auth.models import User
 from django.template import RequestContext
