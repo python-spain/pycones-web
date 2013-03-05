@@ -3,6 +3,7 @@
 import uuid
 
 from django.shortcuts import render_to_response,redirect
+from django.db import transaction
 from django.contrib.auth.models import User
 from django.template.loader import render_to_string
 from django.template import RequestContext
@@ -26,6 +27,7 @@ def send_welcome_msg(email_user,token):
     msg.send()
 
 
+@transaction.commit_on_success
 def suscribe_newsletter(request):
     """
     View to suscribe new users to newsletter
