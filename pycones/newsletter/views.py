@@ -12,7 +12,9 @@ from django import http
 from .models import Subscription, get_or_create_active_newsletter
 
 
-def send_welcome_msg(email_user,token):
+def send_welcome_msg(email_user, token):
+    from django.core.mail import EmailMultiAlternatives
+
     subject = u'¡Bienvenido a PyConES!'
     from_email = u'newsletter@es.pycon.org'
 
