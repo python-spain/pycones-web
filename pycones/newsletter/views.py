@@ -3,6 +3,9 @@
 from django.shortcuts import render_to_response,redirect
 from django.contrib.auth.models import User
 from django.template import RequestContext
+from django import http
+
+from .models import Subscription, get_or_create_active_newsletter
 
 
 def send_welcome_msg(email_user,token):
@@ -49,24 +52,34 @@ def suscribe_newsletter(request):
     if request.method != 'POST':
         return redirect('/')
 
-    email_user = request.POST['email_user']
-    if email_user:
-        try:
-            user = User.objects.create_user(email_user,email_user,email_user)
-            user.last_name='newsletter'
-            user.save()
+    email = request.POST('email_user', None)
+    newsletter = get_or_create_active_newsletter()
 
-            context = {'message' : u"Registrado. Muchas gracias"}
-            return render_to_response("newsletter/comingsoon_message.html", context,
-                                      context_instance=RequestContext(request))
-        except:
-            context = {'message' : "Se ha producido un error. Quizás ya estes dado de alta."}
-            return render_to_response("newsletter/comingsoon_message.html", context,
-                                      context_instance=RequestContext(request))
+    if not email_user:
+        context = {'message' : u"Error al recoger el email. Intentalo de nuevo mas tarde"}
+        return render_to_response("newsletter/comingsoon_message.html", context,
+                                  context_instance=RequestContext(request))
 
-    context = {'message' : u"Error al recoger el email. Intentalo de nuevo mas tarde"}
+    if not User.objects.filter(username=email).exists():
+        user = User(username=email, email=email)
+        user.set_unusable_password()
+        user.save()
+
+        # Create a profile model for new user
+        profile = Profile(user=user, newsletter_token=unicode(uuid.uuid4()))
+        profile.save()
+
+    if Subscriber.objects.filter(user=user, newsletter=newsletter).exists():
+        context = {'message' : u"Se ha producido un error. Quizás ya estes dado de alta."}
+        return render_to_response("newsletter/comingsoon_message.html", context,
+                                  context_instance=RequestContext(request))
+
+    subscriber = Subscriber(user=user, newsletter=newsletter)
+    subscriber.save()
+
+    context = {'message' : u"Registrado. Muchas gracias"}
     return render_to_response("newsletter/comingsoon_message.html", context,
-                              context_instance=RequestContext(request))
+                               context_instance=RequestContext(request))
 
 
 def unsuscribe_newsletter(request):
@@ -76,22 +89,29 @@ def unsuscribe_newsletter(request):
     if request.method != 'GET':
         return redirect('/')
 
-    # TODO: must be used forms for this params validation.
-    email_user = request.GET.get('email', None)
-    token_user = request.GET.get('val_token', None)
+    email = request.GET.get('email', None)
+    token = request.GET.get('val_token', None)
 
-    if not email_user or not token_user:
+    newsletter = get_or_create_active_newsletter()
+
+    if not email or not token:
         context = {"message": u"Parametros incorrectos"}
         return render_to_response("newsletter/comingsoon_message.html",
                         context, context_instance=RequestContext(request))
 
+    queryset = User.objects.filter(username=email, profile__newsletter_token=token)
     try:
-        user = User.objects.get(username=email_user, email=email_user,
-                                password=token_user.replace(' ','+'))
-        user.delete()
-        context = {"message": u"Eliminado de la newsletter correctamente"}
+        user = queryset.get()
     except User.DoesNotExist:
         context = {"message": u"Usuario no encontrado."}
+    else:
+        subscription_queryset = Subscription.objects.filter(
+                                    newsletter=newsletter, user=user)
+        if subscription_queryset.exists():
+            subscription_queryset.delete()
+            context = {"message": u"Eliminado de la newsletter correctamente"}
+        else:
+            context = {"message": u"Usuario no encontrado."}
 
     return render_to_response("newsletter/comingsoon_message.html",
                         context, context_instance=RequestContext(request))
