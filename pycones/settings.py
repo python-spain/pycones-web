@@ -8,10 +8,10 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir
 PACKAGE_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 DEBUG = not (os.getenv("DJANGO_ENV", "devel") == "production")
-TEMPLATE_DEBUG = DEBUG
+TEMPLATE_DEBUG = True
 
 # tells Pinax to serve media through the staticfiles app.
-SERVE_MEDIA = DEBUG
+SERVE_MEDIA = True
 
 INTERNAL_IPS = [
     "127.0.0.1",
@@ -211,7 +211,7 @@ LOGIN_URL = "/account/login/" # @@@ any way this can be a url name?
 
 EMAIL_CONFIRMATION_DAYS = 2
 EMAIL_DEBUG = DEBUG
-if not DEBUG:
+if not EMAIL_DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = os.getenv('EMAIL_HOST')
     EMAIL_PORT = os.getenv('EMAIL_PORT')
