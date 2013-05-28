@@ -1,42 +1,38 @@
 ;(function () {
+  var showMessage = function(msgId, message, cls) {
+      $(msgId).html('<p class="' + cls + '">' + message + '</p>')
+              .show()
+              .delay(3000)
+              .fadeOut();
+  };
+
   $('#subscribe-newsletter').click(function(e){
       e.preventDefault();
-
-      var showMessage = function(message, cls) {
-          $('#newsletter-message').html('<p class="' + cls + '">' + message + '</p>')
-                                  .show()
-                                  .delay(3000)
-                                  .fadeOut();
-
-      };
 
       var form = $("#newsletter-form");
 
       $.post(form.attr('action'), form.serialize(), null, 'json')
        .done(function(data){
-           showMessage(data.message, "alert alert-success");
+           showMessage("#newsletter-message", data.message, "alert alert-success");
         })
        .fail(function(data) {
-           showMessage(data.responseJSON.message, "alert alert-error");
+           var responseJSON = JSON.parse(data.responseText);
+           showMessage("#newsletter-message", responseJSON.message, "alert alert-error");
        });
   });
+
   $('#contact-us').click(function(e){
       e.preventDefault();
 
-      var showMessage = function(message, cls) {
-          $('#contact-message').html('<p class="' + cls + '">' + message + '</p>')
-                               .show()
-                               .delay(3000)
-                               .fadeOut();
-          };
-
       var form = $("#contact-us-form");
+
       $.post(form.attr('action'), form.serialize(), null, 'json')
        .done(function(data){
-           showMessage(data.message, "alert alert-success");
+           showMessage("#contact-us-message", data.message, "alert alert-success");
        })
        .fail(function(data){
-           showMessage(data.responseJSON.message, "alert alert-error");
+           var responseJSON = JSON.parse(data.responseText);
+           showMessage("#contact-us-message", responseJSON.message, "alert alert-error");
        });
    });
 })();
